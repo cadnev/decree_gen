@@ -1,4 +1,6 @@
 import russian_datetime
+import consts
+
 import re
 from loguru import logger
 from sys import stdout
@@ -15,14 +17,12 @@ def logger_config(v):
 	logger.add("logs/gen.log", level = "INFO", rotation="10 MB")
 
 def generate_date():
-	formats = ["%d %B %Y года", "%d %B %y", "%d %b %Y г.", "%d %b %y", "%d.%m.%Y", "%d.%m.%y"]
-
 	day = randint(1, 31)
 	month = randint(1, 12)
 	year = randint(2000, 2022)
 
 	try:
-		date = russian_datetime.date(year, month, day).strftime(choice(formats))
+		date = russian_datetime.date(year, month, day).strftime(choice(consts.formats))
 	except ValueError:
 		return generate_date()
 
@@ -58,7 +58,7 @@ def getsize(out):
 
 	return total_size
 
-def checkio(n):
+def to_roman(n):
     result = ''
     for arabic, roman in zip((1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
                              'M     CM   D    CD   C    XC  L   XL  X   IX V  IV I'.split()):

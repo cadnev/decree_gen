@@ -1,4 +1,5 @@
 import auxil
+import consts
 
 from loguru import logger
 from random import choice
@@ -6,6 +7,7 @@ from docx import Document
 import json
 import argparse
 from os import makedirs
+import re
 
 def load_samples(samples_dir):
 	with open(samples_dir + "/headers.txt") as headerfile:
@@ -38,6 +40,56 @@ def load_samples(samples_dir):
 
 	return (header, name, intro, instruction, responsible, creator)
 
+def add_numbering(instruction):
+	instruction = re.split(r"\{\d*\}", instruction)[1:]
+	numbering_type = choice(consts.numbering_types)
+	
+	for indx in range(len(instruction)):
+
+		if numbering_type[0] == "arabic":
+			instruction[indx] = str(indx+1) + numbering_type[1] +  instruction[indx]
+		else:
+			instruction[indx] = str(auxil.to_roman(indx+1)) + numbering_type[1] +  instruction[indx]
+
+	instruction = "".join(instruction)
+
+	return instruction
+
+def write_docx(header, name, intro, instruction,
+	responsible, creator, date, out, count):
+	document = Document()
+
+	headerp = document.add_paragraph()
+	headerp.alignment = 1
+	headerp.add_run(header + '\n\n').bold = True
+	
+	namep = document.add_paragraph()
+	namep.alignment = 1
+	namep.add_run(name)
+
+	document.add_paragraph(intro)
+
+	
+	document.add_paragraph(instruction)
+
+	responsiblep = document.add_paragraph("Ответственным за исполнение настоящего приказа назначить ")
+	responsiblep.add_run(responsible)
+
+	datep = document.add_paragraph(creator+'\n')
+	datep.add_run(date)
+	datep.alignment = 2
+
+	document.save(f"{out}/docx/{count}.docx")
+	logger.info(f"Saved {out}/docx/{count}.docx")
+
+def write_json(instruction, responsible, date, out, count):
+	json_dict = {"instruction": instruction, "responsible": responsible, "date": date}
+
+	with open(f"{out}/json/{count}.json", "w") as jsonf:
+		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
+		logger.info(f"Saved {out}/json/{count}.json")
+
+
 def generate(data, out, size):
 	try:
 		makedirs(out+"/docx")
@@ -51,42 +103,15 @@ def generate(data, out, size):
 		header = choice(data[0])
 		name = choice(data[1])
 		intro = choice(data[2])
-		instruction = choice(data[3])
+		instruction = add_numbering(choice(data[3]))
 		responsible = choice(data[4])
 		creator = choice(data[5])
 		date = auxil.generate_date()
 
+		write_docx(header, name, intro, instruction,
+			responsible, creator, date, out, count)
 
-		document = Document()
-		
-		headerp = document.add_paragraph()
-		headerp.alignment = 1
-		headerp.add_run(header + '\n\n').bold = True
-		
-		namep = document.add_paragraph()
-		namep.alignment = 1
-		namep.add_run(name)
-
-		document.add_paragraph(intro)
-
-		instructionp = document.add_paragraph(instruction)
-
-		responsiblep = document.add_paragraph("Ответственным за исполнение настоящего приказа назначить ")
-		responsiblep.add_run(responsible)
-
-		datep = document.add_paragraph(creator+'\n')
-		datep.add_run(date)
-		datep.alignment = 2
-
-		document.save(f"{out}/docx/{count}.docx")
-		logger.info(f"Saved {out}/docx/{count}.docx")
-
-
-		json_dict = {"instruction": instruction, "responsible": responsible, "date": date}
-
-		with open(f"{out}/json/{count}.json", "w") as jsonf:
-			json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
-			logger.info(f"Saved {out}/json/{count}.json")
+		write_json(instruction, responsible, date, out, count)
 
 		count += 1
 		if count % 25 == 0:
