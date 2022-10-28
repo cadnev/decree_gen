@@ -4,6 +4,7 @@ from loguru import logger
 from sys import stdout
 from random import randint, choice
 import os
+from argparse import ArgumentTypeError
 
 def logger_config(v):
 	logger.remove()
@@ -30,7 +31,7 @@ def generate_date():
 def check_size_format(size, pat=re.compile(r"^\d*[KMG]B$")):
 	if not pat.match(size):
 		logger.error(f"Invalid size argument: {size}")
-		raise argparse.ArgumentTypeError("invalid value")
+		raise ArgumentTypeError("invalid value")
 	return size
 
 def size_to_bytes(size):
