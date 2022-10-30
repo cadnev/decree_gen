@@ -10,10 +10,13 @@ from argparse import ArgumentTypeError
 
 def logger_config(v):
 	logger.remove()
-	if v:
-		logger.add(stdout, level="INFO")
-	else:
+	if int(v) == 0:
 		logger.add(stdout, level="WARNING")
+	elif int(v) == 1:
+		logger.add(stdout, level="INFO")
+	elif int(v) >= 2:
+		logger.add(stdout, level="DEBUG")
+
 	logger.add("logs/gen.log", level = "INFO", rotation="10 MB")
 
 def generate_date():
@@ -31,8 +34,15 @@ def generate_date():
 def check_size_format(size, pat=re.compile(r"^\d*[KMG]B$")):
 	if not pat.match(size):
 		logger.error(f"Invalid size argument: {size}")
-		raise ArgumentTypeError("invalid value")
+		raise ArgumentTypeError("Invalid value")
 	return size
+
+def parse_formats(fmts):
+	if ('j' in fmts) and ('p' not in fmts):
+		logger.error(f"Invalid formats: {fmts}. You can't use 'j' without 'p'.")
+		raise ArgumentTypeError("Invalid value")
+
+	return fmts
 
 def size_to_bytes(size):
 	s = int(size[:-2])
@@ -45,7 +55,6 @@ def size_to_bytes(size):
 	else:
 		logger.error(f"Invalid size argument: {size}")
 
-	logger.info(f"Max size of output dir: {size}, {s}B")
 	return s
 
 def getsize(out):
@@ -65,3 +74,54 @@ def to_roman(n):
         result += n // arabic * roman
         n %= arabic
     return result
+
+def add_numbering(instruction):
+	clauses = re.split(r"\{\d*\}", instruction)[1:]
+	numbering_types = [choice(consts.numbering_types) for _ in range(3)]
+	complete_instruction = [{"clause": clauses[0],
+							"index": 1,
+							"nesting_level": 0,
+							"numbering_type": numbering_types[0]}]
+	numbering = [1, 1, 1]
+
+	for indx in range(1, len(clauses)):
+		clause = clauses[indx]
+		prev_clause = complete_instruction[indx-1]
+		prev_nesting_level = prev_clause["nesting_level"]
+		nesting_level = randint(0, 1) if prev_nesting_level == 0 else randint(0, 2)
+		n_type = numbering_types[nesting_level]
+
+		if prev_nesting_level == nesting_level:
+			numbering[nesting_level] += 1
+			index = numbering[nesting_level]
+		elif prev_nesting_level < nesting_level:
+			numbering[nesting_level] = 1
+			index = numbering[nesting_level]
+		elif prev_nesting_level > nesting_level:
+			numbering[nesting_level] += 1
+			index = numbering[nesting_level]
+
+		complete_instruction.append({"clause": clause,
+									 "index": index,
+									 "nesting_level": nesting_level,
+									 "numbering_type": n_type})
+
+	for indx in range(len(clauses)):
+		index = complete_instruction[indx]["index"]
+		nesting_level = complete_instruction[indx]["nesting_level"]
+		n_type = complete_instruction[indx]["numbering_type"]
+		if n_type[0] == "arabic":
+			clauses[indx] = " "*4*nesting_level + str(index) + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "roman":
+			clauses[indx] = " "*4*nesting_level + str(to_roman(index)) + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "bullet":
+			clauses[indx] = " "*4*nesting_level + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "latin":
+			clauses[indx] = " "*4*nesting_level + consts.latin_alphabet[index-1] + n_type[1] + clauses[indx]
+
+	instruction = "".join(clauses)
+
+	return instruction
