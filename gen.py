@@ -2,12 +2,14 @@ import auxil
 import consts
 
 from loguru import logger
-from random import choice
+from random import choice, randint
 from docx import Document
 import json
 import argparse
 from os import makedirs
 import re
+
+from sys import exit #delete from prod
 
 def load_samples(samples_dir):
 	with open(samples_dir + "/headers.txt") as headerfile:
@@ -41,17 +43,53 @@ def load_samples(samples_dir):
 	return (header, name, intro, instruction, responsible, creator)
 
 def add_numbering(instruction):
-	instruction = re.split(r"\{\d*\}", instruction)[1:]
-	numbering_type = choice(consts.numbering_types)
-	
-	for indx in range(len(instruction)):
+	clauses = re.split(r"\{\d*\}", instruction)[1:]
+	numbering_types = [choice(consts.numbering_types) for _ in range(3)]
+	complete_instruction = [{"clause": clauses[0],
+							"index": 1,
+							"nesting_level": 0,
+							"numbering_type": numbering_types[0]}]
+	numbering = [1, 1, 1]
 
-		if numbering_type[0] == "arabic":
-			instruction[indx] = str(indx+1) + numbering_type[1] +  instruction[indx]
-		else:
-			instruction[indx] = str(auxil.to_roman(indx+1)) + numbering_type[1] +  instruction[indx]
+	for indx in range(1, len(clauses)):
+		clause = clauses[indx]
+		prev_clause = complete_instruction[indx-1]
+		prev_nesting_level = prev_clause["nesting_level"]
+		nesting_level = randint(0, 1) if prev_nesting_level == 0 else randint(0, 2)
+		n_type = numbering_types[nesting_level]
 
-	instruction = "".join(instruction)
+		if prev_nesting_level == nesting_level:
+			numbering[nesting_level] += 1
+			index = numbering[nesting_level]
+		elif prev_nesting_level < nesting_level:
+			numbering[nesting_level] = 1
+			index = numbering[nesting_level]
+		elif prev_nesting_level > nesting_level:
+			numbering[nesting_level] += 1
+			index = numbering[nesting_level]
+
+		complete_instruction.append({"clause": clause,
+									 "index": index,
+									 "nesting_level": nesting_level,
+									 "numbering_type": n_type})
+
+	for indx in range(len(clauses)):
+		index = complete_instruction[indx]["index"]
+		nesting_level = complete_instruction[indx]["nesting_level"]
+		n_type = complete_instruction[indx]["numbering_type"]
+		if n_type[0] == "arabic":
+			clauses[indx] = '\t'*nesting_level + str(index) + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "roman":
+			clauses[indx] = '\t'*nesting_level + str(auxil.to_roman(index)) + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "bullet":
+			clauses[indx] = '\t'*nesting_level + n_type[1] + clauses[indx]
+
+		elif n_type[0] == "latin":
+			clauses[indx] = '\t'*nesting_level + consts.latin_alphabet[index-1] + n_type[1] + clauses[indx]
+
+	instruction = "".join(clauses)
 
 	return instruction
 
