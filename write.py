@@ -19,10 +19,9 @@ def write_docx(header, name, intro, instruction,
 
 	document.add_paragraph(intro)
 	
-	document.add_paragraph(instruction)
+	document.add_paragraph(instruction+'\n')
 
-	responsiblep = document.add_paragraph("Ответственным за исполнение настоящего приказа назначить ")
-	responsiblep.add_run(responsible)
+	document.add_paragraph(responsible)
 
 	datep = document.add_paragraph(creator+'\n')
 	datep.add_run(date)
@@ -53,9 +52,8 @@ def write_pdf(header, name, intro, instruction,
 	
 	pdf.multi_cell(0, 10, txt=name+'\n', align="C")
 	pdf.multi_cell(0, 10, txt=intro, align="J")
-	pdf.multi_cell(0, 10, txt=instruction)
-	pdf.multi_cell(0, 10,
-		     txt="Ответственным за исполнение настоящего приказа назначить "+responsible)
+	pdf.multi_cell(0, 10, txt=instruction+'\n')
+	pdf.multi_cell(0, 10, txt=responsible)
 	pdf.multi_cell(0, 10, txt=creator, align="R")
 	pdf.multi_cell(0, 10, txt=date, align="R")
 

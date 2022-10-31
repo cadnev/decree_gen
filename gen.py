@@ -1,6 +1,7 @@
 import write
 import auxil
 import consts
+import change_case
 
 from random import choice, randint
 import argparse
@@ -23,6 +24,9 @@ def load_samples(samples_dir):
 	with open(samples_dir + "/instructions.txt") as instructionfile:
 		instruction = instructionfile.read().split(";;\n")
 
+	with open(samples_dir + "/execution_control.txt") as execution_controlfile:
+		execution_control = execution_controlfile.read().split('\n')
+
 	with open(samples_dir + "/responsible.txt") as responsiblefile:
 		responsible = responsiblefile.read().split(";;\n")
 
@@ -33,13 +37,14 @@ def load_samples(samples_dir):
 	logger.info(f"[name] length: {len(name)}")
 	logger.info(f"[intro] length: {len(intro)}")
 	logger.info(f"[instruction] length: {len(instruction)}")
+	logger.info(f"[execution_control] length: {len(execution_control)}")
 	logger.info(f"[responsible] length: {len(responsible)}")
 	logger.info(f"[creator] length: {len(creator)}")
-	vars = len(header)*len(name)*len(intro)*len(instruction)
+	vars = len(header)*len(name)*len(intro)*len(instruction)* len(execution_control)
 	logger.info(f"Maximum number of decrees: {vars*len(responsible)*len(creator)}")
 	logger.info(f"Approximate number of different decrees: {vars}")
 
-	return (header, name, intro, instruction, responsible, creator)
+	return (header, name, intro, instruction, execution_control, responsible, creator)
 
 def generate(data, out, formats, size):
 	logger.info(f"Using formats: {formats}")
@@ -63,8 +68,10 @@ def generate(data, out, formats, size):
 		name = choice(data[1])
 		intro = choice(data[2])
 		instruction = auxil.add_numbering(choice(data[3]))
-		responsible = choice(data[4])
-		creator = choice(data[5])
+		execution_control = choice(data[4])
+		responsible = choice(data[5])
+		responsible = change_case.create_responsible(execution_control, responsible)
+		creator = choice(data[6])
 		date = auxil.generate_date()
 
 		write.write_json(instruction, responsible, date, out, count)
