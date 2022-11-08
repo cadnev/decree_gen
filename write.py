@@ -80,6 +80,12 @@ def write_pdf(header, name, intro, instruction,
 	pdf.output(f"{out}/pdf/{count}.pdf")
 	logger.debug(f"Saved {out}/pdf/{count}.pdf")
 
+def write_pdf_linux(docx_path):
+	pass
+
+def write_pdf_windows(docx_path):
+	pass
+
 def write_jpg(out, count):
 	
 	pdf = f"{out}/pdf/{count}.pdf"
