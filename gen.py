@@ -101,13 +101,9 @@ def generate(data, out, formats, size, samples_dir):
 		if 'd' in formats:
 			docx_path = write.write_docx(header, name, intro, instruction,
 				responsible, creator, date[0], out, count)
-		if 'p' in formats:
-			platform = auxil.pltform
 
-			if platform == "windows":
-				write.write_pdf_windows(docx_path, out, count)
-			elif platform == "linux" or platform == "linux2":
-				write.write_pdf_linux(docx_path, out, count)
+		if 'p' in formats:
+			write.write_pdf_linux(docx_path, out, count)
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
