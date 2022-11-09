@@ -86,11 +86,18 @@ def generate(data, out, formats, size):
 		write.write_json(instruction, responsible, date, out, count)
 
 		if 'd' in formats:
-			write.write_docx(header, name, intro, instruction,
+			docx_path = write.write_docx(header, name, intro, instruction,
 				responsible, creator, date, out, count)
 		if 'p' in formats:
-			write.write_pdf(header, name, intro, instruction,
-				responsible, creator, date, out, count)
+			# write.write_pdf(header, name, intro, instruction,
+				# responsible, creator, date, out, count)
+
+			platform = auxil.pltform
+
+			if platform == "windows":
+				write.write_pdf_windows(docx_path, out, count)
+			elif platform == "linux" or platform == "linux2":
+				write.write_pdf_linux(docx_path, out, count)
 
 		if 'j' in formats:
 			write.write_jpg(out, count)

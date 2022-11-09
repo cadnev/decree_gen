@@ -4,6 +4,8 @@ from docx import Document
 import json
 from fpdf import FPDF
 from pdf2jpg import pdf2jpg
+import subprocess as sb
+from os.path import abspath
 
 from loguru import logger
 
@@ -29,8 +31,11 @@ def write_docx(header, name, intro, instruction,
 	datep.add_run(date)
 	datep.alignment = 2
 
-	document.save(f"{out}/docx/{count}.docx")
-	logger.debug(f"Saved {out}/docx/{count}.docx")
+	path = f"{out}/docx/{count}.docx"
+	document.save(path)
+	logger.debug(path)
+
+	return path
 
 def write_json(instruction, responsible, date, out, count):
 	json_dict = {
@@ -57,6 +62,7 @@ def write_json(instruction, responsible, date, out, count):
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
 		logger.debug(f"Saved {out}/json/{count}.json")
 
+# Больше не нужна, удалим при мердже в main ветку
 def write_pdf(header, name, intro, instruction,
               responsible, creator, date, out, count):
 	pdf = FPDF()
@@ -80,10 +86,20 @@ def write_pdf(header, name, intro, instruction,
 	pdf.output(f"{out}/pdf/{count}.pdf")
 	logger.debug(f"Saved {out}/pdf/{count}.pdf")
 
-def write_pdf_linux(docx_path):
-	pass
+def write_pdf_linux(docx_path, out, count):
+	out_path = f"{out}/pdf/{count}.pdf"
+	out_path = abspath(out_path)
+	docx_path = abspath(docx_path)
 
-def write_pdf_windows(docx_path):
+	cmd = ""
+	cmd += f"abiword "
+	cmd += f"-t pdf "
+	cmd += f"-o {out_path} "
+	cmd += docx_path
+	sb.call(cmd, shell=True, stderr=sb.DEVNULL)
+	logger.debug(f"Saved {out_path}")
+
+def write_pdf_windows(docx_path, out, count):
 	pass
 
 def write_jpg(out, count):

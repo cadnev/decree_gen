@@ -3,9 +3,10 @@ import consts
 
 import re
 from loguru import logger
-from sys import stdout
+from sys import stdout, platform
 from random import randint, choice
 import os
+import subprocess as sb
 from argparse import ArgumentTypeError
 
 def logger_config(v):
@@ -36,13 +37,6 @@ def check_size_format(size, pat=re.compile(r"^\d*[KMG]B$")):
 		logger.error(f"Invalid size argument: {size}")
 		raise ArgumentTypeError("Invalid value")
 	return size
-
-def parse_formats(fmts):
-	if ('j' in fmts) and ('p' not in fmts):
-		logger.error(f"Invalid formats: {fmts}. You can't use 'j' without 'p'.")
-		raise ArgumentTypeError("Invalid value")
-
-	return fmts
 
 def size_to_bytes(size):
 	s = int(size[:-2])
@@ -131,3 +125,44 @@ def add_numbering(instruction):
 	instruction = "".join(clauses)
 
 	return instruction
+
+def check_abiword():
+	try:
+		sb.call(["abiword", "--help"], stdout=sb.DEVNULL, stderr=sb.DEVNULL)
+	except FileNotFoundError:
+		logger.critical("abiword is not installed in the system.")
+		raise SystemError("abiword is not installed in your system. "
+			"If you use apt package manager try \"sudo apt install abiword\".")
+
+	return 0
+
+# Возвращает string с именем платформы, если всё хорошо
+# Если чего-то не хватает, вызывает исключение
+def check_os():
+	global pltform
+	pltform = platform 
+
+	logger.info(f"Current platform: {platform}")
+
+	if platform == "windows":
+		try:
+			from comtypes import client
+		except ImportError:
+			loggger.critical(f"Can't import comtypes on {platform}.")
+			raise ImportError("Can't import comtypes.")
+		finally:
+			return platform
+
+	elif platform == "linux" or platform == "linux2":
+		if check_abiword() == 0:
+			return platform
+
+def parse_formats(fmts):
+	if ('j' in fmts) and ('p' not in fmts):
+		logger.error(f"Invalid formats: {fmts}. You can't use 'j' without 'p'.")
+		raise ArgumentTypeError("Invalid value")
+
+	if ('p' in fmts):
+		check_os()
+
+	return fmts
