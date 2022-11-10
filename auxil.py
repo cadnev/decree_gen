@@ -76,6 +76,7 @@ def to_roman(n):
     return result
 
 def add_numbering(instruction):
+	instruction = "\n".join(instruction)
 	clauses = re.split(r"\{\d*\}", instruction)[1:]
 	numbering_types = [choice(consts.numbering_types) for _ in range(3)]
 	complete_instruction = [{"clause": clauses[0],

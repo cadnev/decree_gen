@@ -22,7 +22,16 @@ def load_samples(samples_dir):
 		intro = introfile.read().split(";;\n")
 
 	with open(samples_dir + "/instructions.txt") as instructionfile:
-		instruction = instructionfile.read().split(";;\n")
+		# instruction = instructionfile.read().split(";;\n")
+		all_instructions = instructionfile.read().split(";;\n")
+		instructions = set()
+
+		for _ in range(randint(1, 7)):
+			instructions.add(choice(all_instructions))
+
+		instructions = list(instructions)
+
+		logger.debug(instructions)
 
 	with open(samples_dir + "/execution_control.txt") as execution_controlfile:
 		execution_control = execution_controlfile.read().split('\n')
@@ -33,18 +42,15 @@ def load_samples(samples_dir):
 	with open(samples_dir + "/creators.txt") as creatorfile:
 		creator = creatorfile.read().split('\n')
 
-	logger.info(f"[header] length: {len(header)}")
-	logger.info(f"[name] length: {len(name)}")
-	logger.info(f"[intro] length: {len(intro)}")
-	logger.info(f"[instruction] length: {len(instruction)}")
-	logger.info(f"[execution_control] length: {len(execution_control)}")
-	logger.info(f"[responsible] length: {len(responsible)}")
-	logger.info(f"[creator] length: {len(creator)}")
-	vars = len(header)*len(name)*len(intro)*len(instruction)* len(execution_control)
-	logger.info(f"Maximum number of decrees: {vars*len(responsible)*len(creator)}")
-	logger.info(f"Approximate number of different decrees: {vars}")
+	logger.debug(f"[header] length: {len(header)}")
+	logger.debug(f"[name] length: {len(name)}")
+	logger.debug(f"[intro] length: {len(intro)}")
+	logger.debug(f"[all_instructions] length: {len(all_instructions)}")
+	logger.debug(f"[execution_control] length: {len(execution_control)}")
+	logger.debug(f"[responsible] length: {len(responsible)}")
+	logger.debug(f"[creator] length: {len(creator)}")
 
-	return (header, name, intro, instruction, execution_control, responsible, creator)
+	return (header, name, intro, instructions, execution_control, responsible, creator)
 
 def generate(data, out, formats, size):
 	logger.info(f"Using formats: {formats}")
@@ -67,7 +73,7 @@ def generate(data, out, formats, size):
 		header = choice(data[0])
 		name = choice(data[1])
 		intro = choice(data[2])
-		instruction = auxil.add_numbering(choice(data[3]))
+		instruction = data[3]
 		execution_control = choice(data[4])
 		responsible = choice(data[5])
 		responsible = change_case.create_responsible(execution_control, responsible)
@@ -85,6 +91,10 @@ def generate(data, out, formats, size):
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
+
+		###
+		break
+		###
 
 		count += 1
 		if count % 25 == 0:

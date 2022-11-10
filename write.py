@@ -1,3 +1,5 @@
+import auxil
+
 from docx import Document
 import json
 from fpdf import FPDF
@@ -19,7 +21,7 @@ def write_docx(header, name, intro, instruction,
 
 	document.add_paragraph(intro)
 	
-	document.add_paragraph(instruction+'\n')
+	document.add_paragraph(auxil.add_numbering(instruction)+'\n')
 
 	document.add_paragraph(responsible)
 
@@ -31,7 +33,16 @@ def write_docx(header, name, intro, instruction,
 	logger.debug(f"Saved {out}/docx/{count}.docx")
 
 def write_json(instruction, responsible, date, out, count):
-	json_dict = {"instruction": instruction, "responsible": responsible, "date": date}
+	json_dict = {
+		"Tasks": {}
+	}
+
+	for i in range(len(instruction)):
+		instr = instruction[i][4:].strip()
+		json_dict["Tasks"][f"Task{i+1}"] = {"task_text": instr}
+
+	json_dict["Tasks"]["Global_supervisor"] = responsible
+	json_dict["Tasks"]["Global_deadline"] = date
 
 	with open(f"{out}/json/{count}.json", "w") as jsonf:
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
