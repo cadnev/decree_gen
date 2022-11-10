@@ -8,6 +8,7 @@ import argparse
 from os import makedirs
 import re
 from time import time
+import json
 
 from loguru import logger
 
@@ -21,17 +22,19 @@ def load_samples(samples_dir):
 	with open(samples_dir + "/intros.txt") as introfile:
 		intro = introfile.read().split(";;\n")
 
-	with open(samples_dir + "/instructions.txt") as instructionfile:
-		# instruction = instructionfile.read().split(";;\n")
-		all_instructions = instructionfile.read().split(";;\n")
-		instructions = set()
+	with open(samples_dir + "/instructions.json") as instructionfile:
+		all_instructions = json.load(instructionfile)
+		instructions = []
 
 		for _ in range(randint(1, 7)):
-			instructions.add(choice(all_instructions))
+			instructions.append(choice(all_instructions))
 
-		instructions = list(instructions)
-
-		logger.debug(instructions)
+		# Удаление повторяющихся элементов
+		i = []
+		for e in instructions:
+			if e not in i:
+				i.append(e)
+		instructions = i
 
 	with open(samples_dir + "/execution_control.txt") as execution_controlfile:
 		execution_control = execution_controlfile.read().split('\n')

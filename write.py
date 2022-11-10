@@ -38,8 +38,17 @@ def write_json(instruction, responsible, date, out, count):
 	}
 
 	for i in range(len(instruction)):
-		instr = instruction[i][4:].strip()
-		json_dict["Tasks"][f"Task{i+1}"] = {"task_text": instr}
+		instr = instruction[i]
+		task_text = instr["task_text"][4:].strip()
+		task_responsibles_people = instr["task_responsibles_people"]
+		task_responsibles_groups = instr["task_responsibles_groups"]
+		task_deadline = instr["task_deadline"]
+
+		json_dict["Tasks"][f"Task{i+1}"] = {"task_text": task_text}
+		json_dict["Tasks"][f"Task{i+1}"]["task_responsibles_people"] = task_responsibles_people
+		json_dict["Tasks"][f"Task{i+1}"]["task_responsibles_groups"] = task_responsibles_groups
+		json_dict["Tasks"][f"Task{i+1}"]["task_deadline"] = task_deadline
+
 
 	json_dict["Tasks"]["Global_supervisor"] = responsible
 	json_dict["Tasks"]["Global_deadline"] = date
