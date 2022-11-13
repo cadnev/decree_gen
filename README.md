@@ -1,5 +1,6 @@
 # Decree generator
-Python script that generates a lot of decrees from samples
+Python script that generates a lot of decrees from samples.
+Скрипт для генерации файлов приказов из образцов.
 
 ## Usage
 ```
@@ -28,3 +29,7 @@ $ python3 gen.py 50MB -f d -s samples -o output_decrees
 2022-10-24 01:19:35.995 | WARNING  | __main__:generate:94 - Size of output_decrees dir: 52605387 bytes
 2022-10-24 01:19:35.996 | WARNING  | __main__:main:116 - Generation is finished!
 ```
+
+## Samples description
+![description one](https://github.com/cadnev/decree_gen/blob/main/raw/img/desc1.jpg)
+![description two](https://github.com/cadnev/decree_gen/blob/main/raw/img/desc2.jpg)
