@@ -55,7 +55,7 @@ def load_samples(samples_dir):
 
 	return (header, name, intro, instructions, execution_control, responsible, creator)
 
-def generate(data, out, formats, size):
+def generate(data, out, formats, size, samples_dir):
 	logger.info(f"Using formats: {formats}")
 
 	try:
@@ -78,10 +78,18 @@ def generate(data, out, formats, size):
 		intro = choice(data[2])
 		instruction = data[3]
 		execution_control = choice(data[4])
-		responsible = choice(data[5])
-		responsible = change_case.create_responsible(execution_control, responsible)
+
+		# Шанс 33% на наличие ответственных в приказе
+		if randint(1, 3) == 1:
+			responsible = choice(data[5])
+			responsible = change_case.create_responsible(execution_control, responsible)
+		else:
+			responsible = ""
+
 		creator = choice(data[6])
 		date = auxil.generate_date()
+
+		instruction = write.extend_instruction(instruction, samples_dir)
 
 		write.write_json(instruction, responsible, date, out, count)
 
@@ -101,10 +109,6 @@ def generate(data, out, formats, size):
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
-
-		###
-		break
-		###
 
 		count += 1
 		if count % 25 == 0:
@@ -143,13 +147,15 @@ def get_args():
 	return parser.parse_args()
 
 def main():
+	global args
+
 	args = get_args()
 	auxil.logger_config(args.verbose)
 
 	data = load_samples(args.samples)
 	bytes_size = auxil.size_to_bytes(args.size)
 
-	generate(data, args.out, args.format, bytes_size)
+	generate(data, args.out, args.format, bytes_size, args.samples)
 
 	logger.warning("Generation is finished!")
 

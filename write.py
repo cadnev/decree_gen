@@ -1,4 +1,6 @@
 import auxil
+import gen
+import change_case
 
 from docx import Document
 import json
@@ -6,8 +8,58 @@ from fpdf import FPDF
 from pdf2jpg import pdf2jpg
 import subprocess as sb
 from os.path import abspath
+from random import randint, choice
+import re
 
 from loguru import logger
+
+# Добавляет ответственных и дедлайн в задачу, если их нет
+def extend_instruction(instruction, samples_dir):
+	for i in range(len(instruction)):
+		instr = instruction[i]
+		task_responsibles_people = instr["task_responsibles_people"]
+		task_responsibles_groups = instr["task_responsibles_groups"]
+		task_deadline = instr["task_deadline"]
+
+		if (not task_responsibles_people) and (not task_responsibles_groups):
+			
+			# Шанс 25%
+			if randint(1, 4) == 1:
+
+				# Ответственные в новом предложении или в новом абзаце
+				sep_char = ' ' if randint(0, 1) == True else '\n'
+
+				with open(f"{samples_dir}/task_control.txt") as cfile:
+					ctrl_list = cfile.read().split('\n')
+					ctrl_msg = choice(ctrl_list)
+
+				with open(f"{samples_dir}/responsible.txt") as rfile:
+					resp_list = rfile.read().split(';;\n')
+					resp = choice(resp_list)
+
+				instruction[i]["task_responsibles_people"] = re.sub(r"{*}*", '', resp)
+
+				resp = change_case.create_responsible(ctrl_msg, resp)
+				instruction[i]["task_text"] += sep_char + resp + '.'
+
+		if (not task_deadline):
+
+			# Шанс 25%
+			if randint(1, 4) == 1:
+
+				# Дедлайн в новом предложении или в новом абзаце
+				sep_char = ' ' if randint(0, 1) == True else '\n'
+				deadline = auxil.generate_date(standart_format=True)
+
+				with open(f"{samples_dir}/task_deadline.txt") as ddfile:
+					dd_list = ddfile.read().split('\n')
+					deadline_msg = choice(dd_list)
+					
+				instruction[i]["task_deadline"] = deadline
+				instruction[i]["task_text"] += sep_char + deadline_msg
+				instruction[i]["task_text"] += deadline + '.'
+
+	return instruction
 
 def write_docx(header, name, intro, instruction,
 	responsible, creator, date, out, count):
@@ -24,7 +76,7 @@ def write_docx(header, name, intro, instruction,
 	document.add_paragraph(intro)
 	
 	document.add_paragraph(auxil.add_numbering(instruction)+'\n')
-
+	
 	document.add_paragraph(responsible)
 
 	datep = document.add_paragraph(creator+'\n')
