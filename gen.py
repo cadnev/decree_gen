@@ -23,18 +23,19 @@ def load_samples(samples_dir):
 		intro = introfile.read().split(";;\n")
 
 	with open(samples_dir + "/instructions.json") as instructionfile:
-		all_instructions = json.load(instructionfile)
-		instructions = []
+		# all_instructions = json.load(instructionfile)
+		instructions = json.load(instructionfile)
+		# instructions = []
 
-		for _ in range(randint(1, 7)):
-			instructions.append(choice(all_instructions))
+		# for _ in range(randint(1, 7)):
+		# 	instructions.append(choice(all_instructions))
 
-		# Удаление повторяющихся элементов
-		i = []
-		for e in instructions:
-			if e not in i:
-				i.append(e)
-		instructions = i
+		# # Удаление повторяющихся элементов
+		# i = []
+		# for e in instructions:
+		# 	if e not in i:
+		# 		i.append(e)
+		# instructions = i
 
 	with open(samples_dir + "/execution_control.txt") as execution_controlfile:
 		execution_control = execution_controlfile.read().split('\n')
@@ -48,7 +49,7 @@ def load_samples(samples_dir):
 	logger.debug(f"[header] length: {len(header)}")
 	logger.debug(f"[name] length: {len(name)}")
 	logger.debug(f"[intro] length: {len(intro)}")
-	logger.debug(f"[all_instructions] length: {len(all_instructions)}")
+	logger.debug(f"[instructions] length: {len(instructions)}")
 	logger.debug(f"[execution_control] length: {len(execution_control)}")
 	logger.debug(f"[responsible] length: {len(responsible)}")
 	logger.debug(f"[creator] length: {len(creator)}")
@@ -76,7 +77,20 @@ def generate(data, out, formats, size, samples_dir):
 		header = choice(data[0])
 		name = choice(data[1])
 		intro = choice(data[2])
-		instruction = data[3]
+		
+		all_instructions = data[3]
+		instruction = []
+
+		for _ in range(randint(1, 7)):
+			instruction.append(choice(all_instructions))
+
+		# Удаление повторяющихся элементов
+		i = []
+		for e in instruction:
+			if e not in i:
+				i.append(e)
+		instruction = i
+
 		execution_control = choice(data[4])
 
 		# Шанс 33% на наличие ответственных в приказе
