@@ -20,15 +20,18 @@ def logger_config(v):
 
 	logger.add("logs/gen.log", level = "INFO", rotation="10 MB")
 
-def generate_date():
+def generate_date(standart_format=False):
 	day = randint(1, 31)
 	month = randint(1, 12)
 	year = randint(2000, 2022)
 
 	try:
-		date = russian_datetime.date(year, month, day).strftime(choice(consts.formats))
+		if not standart_format:
+			date = russian_datetime.date(year, month, day).strftime(choice(consts.formats))
+		else:
+			date = russian_datetime.date(year, month, day).strftime(consts.formats[0])
 	except ValueError:
-		return generate_date()
+		return generate_date(standart_format)
 
 	return date
 
@@ -71,6 +74,7 @@ def to_roman(n):
 
 def add_numbering(instruction):
 	string_instruction = ""
+
 	for e in instruction:
 		string_instruction += e["task_text"]
 		string_instruction += '\n'
@@ -111,16 +115,16 @@ def add_numbering(instruction):
 		nesting_level = complete_instruction[indx]["nesting_level"]
 		n_type = complete_instruction[indx]["numbering_type"]
 		if n_type[0] == "arabic":
-			clauses[indx] = " "*4*nesting_level + str(index) + n_type[1] + clauses[indx]
+			clauses[indx] = '\t'*nesting_level + str(index) + n_type[1] + clauses[indx]
 
 		elif n_type[0] == "roman":
-			clauses[indx] = " "*4*nesting_level + str(to_roman(index)) + n_type[1] + clauses[indx]
+			clauses[indx] = '\t'*nesting_level + str(to_roman(index)) + n_type[1] + clauses[indx]
 
 		elif n_type[0] == "bullet":
-			clauses[indx] = " "*4*nesting_level + n_type[1] + clauses[indx]
+			clauses[indx] = '\t'*nesting_level + n_type[1] + clauses[indx]
 
 		elif n_type[0] == "latin":
-			clauses[indx] = " "*4*nesting_level + consts.latin_alphabet[index-1] + n_type[1] + clauses[indx]
+			clauses[indx] = '\t'*nesting_level + consts.latin_alphabet[index-1] + n_type[1] + clauses[indx]
 
 	instruction = "".join(clauses)
 
