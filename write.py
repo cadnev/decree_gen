@@ -49,7 +49,7 @@ def extend_instruction(instruction, samples_dir):
 
 				# Дедлайн в новом предложении или в новом абзаце
 				sep_char = ' ' if randint(0, 1) == True else '\n'
-				deadline = auxil.generate_date(standart_format=True)
+				deadline = auxil.generate_date(unixtime=True)
 
 				with open(f"{samples_dir}/task_deadline.txt") as ddfile:
 					dd_list = ddfile.read().split('\n')
@@ -57,7 +57,7 @@ def extend_instruction(instruction, samples_dir):
 					
 				instruction[i]["task_deadline"] = deadline
 				instruction[i]["task_text"] += sep_char + deadline_msg
-				instruction[i]["task_text"] += deadline + '.'
+				instruction[i]["task_text"] += deadline[0] + '.'
 
 	return instruction
 

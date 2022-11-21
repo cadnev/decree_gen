@@ -20,7 +20,7 @@ def logger_config(v):
 
 	logger.add("logs/gen.log", level = "INFO", rotation="10 MB")
 
-def generate_date(standart_format=False):
+def generate_date(standart_format=False, unixtime=False):
 	day = randint(1, 31)
 	month = randint(1, 12)
 	year = randint(2000, 2022)
@@ -33,7 +33,10 @@ def generate_date(standart_format=False):
 	except ValueError:
 		return generate_date(standart_format)
 
-	return date
+	if not unixtime:
+		return date[0]
+	else:
+		return date
 
 def check_size_format(size, pat=re.compile(r"^\d*[KMG]B$")):
 	if not pat.match(size):

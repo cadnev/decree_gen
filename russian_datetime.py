@@ -1,4 +1,5 @@
 from datetime import date as dt
+from time import mktime
 
 Bs = ["января", "февраля", "марта", "апреля", "мая", "июня",
 	"июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -12,10 +13,12 @@ class date(dt):
 	def strftime(self, format):
 		if ("%b" in format):
 			format = format.replace("%b", bs[self.month-1])
-			return dt(self.year, self.month, self.day).strftime(format)
+			date = dt(self.year, self.month, self.day)
+			return (date.strftime(format), mktime(date.timetuple()))
 		elif ("%B" in format):
 			format = format.replace("%B", Bs[self.month-1])
-			return dt(self.year, self.month, self.day).strftime(format)
+			date = dt(self.year, self.month, self.day)
+			return (date.strftime(format), mktime(date.timetuple()))
 		else:
-			return dt(self.year, self.month, self.day).strftime(format)
-
+			date = dt(self.year, self.month, self.day)
+			return (date.strftime(format), mktime(date.timetuple()))
