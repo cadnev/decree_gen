@@ -119,46 +119,6 @@ def write_json(instruction, responsible_arr, date, out, count):
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
 		logger.debug(f"Saved {out}/json/{count}.json")
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-def write_pdf_linux(docx_path, out, count):
-	out_path = f"{out}/pdf/{count}.pdf"
-	out_path = abspath(out_path)
-	docx_path = abspath(docx_path)
-=======
-# Больше не нужна, удалим при мердже в main ветку
-def write_pdf(header, name, intro, instruction,
-              responsible, creator, date, out, count):
-	pdf = FPDF()
-	pdf.add_page()
->>>>>>> 25d4385 (Added the ability to convert docx to pdf on linux via abiword.)
-
-	cmd = ""
-	cmd += f"abiword "
-	cmd += f"-t pdf "
-	cmd += f"-o {out_path} "
-	cmd += docx_path
-	sb.call(cmd, shell=True, stderr=sb.DEVNULL)
-	logger.debug(f"Saved {out_path}")
-
-<<<<<<< HEAD
-=======
-	pdf.multi_cell(0, 10, txt = header+"\n\n", align="C")
-	
-	pdf.set_font("DejaVu", size=14)
-	
-	pdf.multi_cell(0, 10, txt=name+'\n', align="C")
-	pdf.multi_cell(0, 10, txt=intro, align="J")
-	pdf.multi_cell(0, 10, txt=instruction+'\n')
-	pdf.multi_cell(0, 10, txt=responsible)
-	pdf.multi_cell(0, 10, txt=creator, align="R")
-	pdf.multi_cell(0, 10, txt=date, align="R")
-
-	pdf.output(f"{out}/pdf/{count}.pdf")
-	logger.debug(f"Saved {out}/pdf/{count}.pdf")
-
-=======
->>>>>>> 9481b69 (Only linux support.)
 def write_pdf_linux(docx_path, out, count):
 	out_path = f"{out}/pdf/{count}.pdf"
 	out_path = abspath(out_path)
@@ -172,13 +132,6 @@ def write_pdf_linux(docx_path, out, count):
 	sb.call(cmd, shell=True, stderr=sb.DEVNULL)
 	logger.debug(f"Saved {out_path}")
 
-<<<<<<< HEAD
->>>>>>> 25d4385 (Added the ability to convert docx to pdf on linux via abiword.)
-def write_pdf_windows(docx_path, out, count):
-	pass
-
-=======
->>>>>>> 9481b69 (Only linux support.)
 def write_jpg(out, count):
 	
 	pdf = f"{out}/pdf/{count}.pdf"
