@@ -91,11 +91,6 @@ def write_docx(header, name, intro, instruction,
 	path = f"{out}/docx/{count}.docx"
 	document.save(path)
 	logger.debug(path)
-<<<<<<< HEAD
-=======
-
-	return path
->>>>>>> 25d4385 (Added the ability to convert docx to pdf on linux via abiword.)
 
 	return path
 
@@ -124,6 +119,7 @@ def write_json(instruction, responsible_arr, date, out, count):
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
 		logger.debug(f"Saved {out}/json/{count}.json")
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 def write_pdf_linux(docx_path, out, count):
 	out_path = f"{out}/pdf/{count}.pdf"
@@ -161,6 +157,8 @@ def write_pdf(header, name, intro, instruction,
 	pdf.output(f"{out}/pdf/{count}.pdf")
 	logger.debug(f"Saved {out}/pdf/{count}.pdf")
 
+=======
+>>>>>>> 9481b69 (Only linux support.)
 def write_pdf_linux(docx_path, out, count):
 	out_path = f"{out}/pdf/{count}.pdf"
 	out_path = abspath(out_path)
@@ -174,10 +172,13 @@ def write_pdf_linux(docx_path, out, count):
 	sb.call(cmd, shell=True, stderr=sb.DEVNULL)
 	logger.debug(f"Saved {out_path}")
 
+<<<<<<< HEAD
 >>>>>>> 25d4385 (Added the ability to convert docx to pdf on linux via abiword.)
 def write_pdf_windows(docx_path, out, count):
 	pass
 
+=======
+>>>>>>> 9481b69 (Only linux support.)
 def write_jpg(out, count):
 	
 	pdf = f"{out}/pdf/{count}.pdf"

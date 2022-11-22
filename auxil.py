@@ -149,24 +149,17 @@ def check_os():
 	global pltform
 	pltform = platform 
 
-	logger.info(f"Current platform: {platform}")
-
-	if platform == "windows":
-		try:
-			from comtypes import client
-		except ImportError:
-			loggger.critical(f"Can't import comtypes on {platform}.")
-			raise ImportError("Can't import comtypes.")
-		finally:
-			return platform
-
-	elif platform == "linux" or platform == "linux2":
+	if platform == "linux" or platform == "linux2":
 		if check_abiword() == 0:
 			return platform
 
 def parse_formats(fmts):
 	if ('j' in fmts) and ('p' not in fmts):
 		logger.error(f"Invalid formats: {fmts}. You can't use 'j' without 'p'.")
+		raise ArgumentTypeError("Invalid value")
+
+	if ('p' in fmts) and ('d' not in fmts):
+		logger.error(f"Invalid formats: {fmts}. You can't use 'p' without 'd'.")
 		raise ArgumentTypeError("Invalid value")
 
 	if ('p' in fmts):
