@@ -4,7 +4,6 @@ import change_case
 
 from docx import Document
 import json
-from fpdf import FPDF
 from pdf2jpg import pdf2jpg
 import subprocess as sb
 from os.path import abspath
@@ -33,14 +32,18 @@ def extend_instruction(instruction, samples_dir):
 					ctrl_list = cfile.read().split('\n')
 					ctrl_msg = choice(ctrl_list)
 
-				with open(f"{samples_dir}/responsible.txt") as rfile:
-					resp_list = rfile.read().split(';;\n')
+				with open(f"{samples_dir}/responsible.json") as rfile:
+					resp_list = json.load(rfile)
 					resp = choice(resp_list)
 
-				instruction[i]["task_responsibles_people"] = re.sub(r"{*}*", '', resp)
+				# resp[0] = re.sub(r"{*}*", '', resp[0])
+				instruction[i]["task_responsibles_people"] = resp[1:]
 
-				resp = change_case.create_responsible(ctrl_msg, resp)
-				instruction[i]["task_text"] += sep_char + resp + '.'
+				resp_to_doc = change_case.create_responsible(ctrl_msg, resp[0])
+				instruction[i]["task_text"] += sep_char + resp_to_doc + '.'
+
+				if ("оставляю за собой" in resp_to_doc):
+					instruction[i]["task_responsibles_people"] = "Автор приказа."
 
 		if (not task_deadline):
 
@@ -89,7 +92,7 @@ def write_docx(header, name, intro, instruction,
 
 	return path
 
-def write_json(instruction, responsible, date, out, count):
+def write_json(instruction, responsible_arr, date, out, count):
 	json_dict = {
 		"Tasks": {}
 	}
@@ -107,36 +110,12 @@ def write_json(instruction, responsible, date, out, count):
 		json_dict["Tasks"][f"Task{i+1}"]["task_deadline"] = task_deadline
 
 
-	json_dict["Tasks"]["Global_supervisor"] = responsible
+	json_dict["Tasks"]["Global_supervisor"] = responsible_arr
 	json_dict["Tasks"]["Global_deadline"] = date
 
 	with open(f"{out}/json/{count}.json", "w") as jsonf:
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
 		logger.debug(f"Saved {out}/json/{count}.json")
-
-# Больше не нужна, удалим при мердже в main ветку
-def write_pdf(header, name, intro, instruction,
-              responsible, creator, date, out, count):
-	pdf = FPDF()
-	pdf.add_page()
-
-	pdf.add_font('DejaVu', '', 'fonts/DejaVuSansCondensed.ttf', uni=True)
-	pdf.add_font('DejaVu', 'B', 'fonts/DejaVuSansCondensed-Bold.ttf', uni=True)
-	pdf.set_font('DejaVu', 'B', 14)
-
-	pdf.multi_cell(0, 10, txt = header+"\n\n", align="C")
-	
-	pdf.set_font("DejaVu", size=14)
-	
-	pdf.multi_cell(0, 10, txt=name+'\n', align="C")
-	pdf.multi_cell(0, 10, txt=intro, align="J")
-	pdf.multi_cell(0, 10, txt=instruction+'\n')
-	pdf.multi_cell(0, 10, txt=responsible)
-	pdf.multi_cell(0, 10, txt=creator, align="R")
-	pdf.multi_cell(0, 10, txt=date, align="R")
-
-	pdf.output(f"{out}/pdf/{count}.pdf")
-	logger.debug(f"Saved {out}/pdf/{count}.pdf")
 
 def write_pdf_linux(docx_path, out, count):
 	out_path = f"{out}/pdf/{count}.pdf"

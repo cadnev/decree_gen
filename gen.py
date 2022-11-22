@@ -23,25 +23,14 @@ def load_samples(samples_dir):
 		intro = introfile.read().split(";;\n")
 
 	with open(samples_dir + "/instructions.json") as instructionfile:
-		# all_instructions = json.load(instructionfile)
 		instructions = json.load(instructionfile)
-		# instructions = []
-
-		# for _ in range(randint(1, 7)):
-		# 	instructions.append(choice(all_instructions))
-
-		# # Удаление повторяющихся элементов
-		# i = []
-		# for e in instructions:
-		# 	if e not in i:
-		# 		i.append(e)
-		# instructions = i
 
 	with open(samples_dir + "/execution_control.txt") as execution_controlfile:
 		execution_control = execution_controlfile.read().split('\n')
 
-	with open(samples_dir + "/responsible.txt") as responsiblefile:
-		responsible = responsiblefile.read().split(";;\n")
+	with open(samples_dir + "/responsible.json") as responsiblefile:
+		# responsible = responsiblefile.read().split(";;\n")
+		responsible = json.load(responsiblefile)
 
 	with open(samples_dir + "/creators.txt") as creatorfile:
 		creator = creatorfile.read().split('\n')
@@ -95,25 +84,24 @@ def generate(data, out, formats, size, samples_dir):
 
 		# Шанс 33% на наличие ответственных в приказе
 		if randint(1, 3) == 1:
-			responsible = choice(data[5])
-			responsible = change_case.create_responsible(execution_control, responsible)
+			responsible_arr = choice(data[5])
+			responsible = change_case.create_responsible(execution_control, responsible_arr[0])
+			responsible_arr[0] = responsible
 		else:
 			responsible = ""
+			responsible_arr = []
 
 		creator = choice(data[6])
-		date = auxil.generate_date()
+		date = auxil.generate_date(unixtime=True)
 
 		instruction = write.extend_instruction(instruction, samples_dir)
 
-		write.write_json(instruction, responsible, date, out, count)
+		write.write_json(instruction, responsible_arr, date, out, count)
 
 		if 'd' in formats:
 			docx_path = write.write_docx(header, name, intro, instruction,
-				responsible, creator, date, out, count)
+				responsible, creator, date[0], out, count)
 		if 'p' in formats:
-			# write.write_pdf(header, name, intro, instruction,
-				# responsible, creator, date, out, count)
-
 			platform = auxil.pltform
 
 			if platform == "windows":

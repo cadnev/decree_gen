@@ -65,7 +65,7 @@ def change_job_case(responsible, execution_control, case):
 
 	return execution_control.replace('{'+case[0]+'}', responsible)
 
-def create_responsible(execution_control, responsible):
+def create_responsible(execution_control, responsible_arr):
 	case = get_case(execution_control)
-	responsible = change_name_case(responsible, case)
+	responsible = change_name_case(responsible_arr, case)
 	return (change_job_case(responsible, execution_control, case))
