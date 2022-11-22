@@ -36,8 +36,10 @@ def extend_instruction(instruction, samples_dir):
 					resp_list = json.load(rfile)
 					resp = choice(resp_list)
 
-				# resp[0] = re.sub(r"{*}*", '', resp[0])
-				instruction[i]["task_responsibles_people"] = resp[1:]
+				if resp[-1] != "group":
+					instruction[i]["task_responsibles_people"] = resp[1:]
+				else:
+					instruction[i]["task_responsibles_groups"] = resp[1:-1]
 
 				resp_to_doc = change_case.create_responsible(ctrl_msg, resp[0])
 				instruction[i]["task_text"] += sep_char + resp_to_doc + '.'
