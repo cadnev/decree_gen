@@ -1,15 +1,18 @@
 import auxil
 import gen
 import change_case
+import consts
 
-from docx import Document
-import json
-from pdf2jpg import pdf2jpg
 import subprocess as sb
 from os.path import abspath
 from random import randint, choice
 import re
 
+from docx import Document
+from docx.shared import Mm, Pt
+import json
+from pdf2jpg import pdf2jpg
+from PyPDF2 import PdfReader
 from loguru import logger
 
 # Добавляет ответственных и дедлайн в задачу, если их нет
@@ -67,8 +70,23 @@ def extend_instruction(instruction, samples_dir):
 	return instruction
 
 def write_docx(header, name, intro, instruction,
-	responsible, creator, date, out, count):
+	responsible, creator, date, out, count, logo, sign):
 	document = Document()
+
+	style = document.styles['Normal']
+	font = style.font
+	p_format = style.paragraph_format
+	font.name = consts.font_name
+	font.size = consts.font_size
+	p_format.line_spacing_rule = consts.line_spacing
+
+	for section in document.sections:
+		section.top_margin = consts.top_margin
+		section.bottom_margin =consts.bottom_margin
+		section.left_margin = consts.left_margin
+		section.right_margin = consts.right_margin
+
+	document.add_picture(logo, consts.logo_w, consts.logo_h)
 
 	headerp = document.add_paragraph()
 	headerp.alignment = 1
@@ -78,15 +96,25 @@ def write_docx(header, name, intro, instruction,
 	namep.alignment = 1
 	namep.add_run(name)
 
-	document.add_paragraph(intro)
+	introp = document.add_paragraph(intro)
+	introp.paragraph_format.first_line_indent = consts.first_line_indent
 	
-	document.add_paragraph(auxil.add_numbering(instruction)+'\n')
+	instruction = auxil.add_numbering(instruction)
+	ip = document.add_paragraph()
+	for i in instruction:
+		run = ip.add_run(i)
 	
-	document.add_paragraph(responsible)
+	responsiblep = document.add_paragraph(responsible)
+	responsiblep.paragraph_format.first_line_indent = consts.first_line_indent
 
 	datep = document.add_paragraph(creator+'\n')
 	datep.add_run(date)
 	datep.alignment = 2
+
+	signp = document.add_paragraph()
+	signp.alignment = 2
+	signr = signp.add_run()
+	signr.add_picture(sign, consts.sign_w, consts.sign_h)
 
 	path = f"{out}/docx/{count}.docx"
 	document.save(path)
@@ -119,6 +147,8 @@ def write_json(instruction, responsible_arr, date, out, count):
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
 		logger.debug(f"Saved {out}/json/{count}.json")
 
+	return f"{out}/json/{count}.json"
+
 def write_pdf_linux(docx_path, out, count):
 	out_path = f"{out}/pdf/{count}.pdf"
 	out_path = abspath(out_path)
@@ -132,6 +162,8 @@ def write_pdf_linux(docx_path, out, count):
 	sb.call(cmd, shell=True, stderr=sb.DEVNULL)
 	logger.debug(f"Saved {out_path}")
 
+	return out_path
+
 def write_jpg(out, count):
 	
 	pdf = f"{out}/pdf/{count}.pdf"
@@ -139,3 +171,50 @@ def write_jpg(out, count):
 
 	pdf2jpg.convert_pdf2jpg(pdf, output, pages="ALL")
 	logger.debug(f"Saved {out}/jpg/{count}.pdf_dir/")
+
+def write_coords(json_path, pdf_path):
+	# Координаты логотипа
+	logo_coords = []
+	logo_coords.append([int(auxil.mm_to_px(consts.left_margin.mm)) - consts.logo_offset,
+		int(auxil.mm_to_px(consts.top_margin.mm)) - consts.logo_offset])
+	logo_coords.append([int(auxil.mm_to_px(consts.left_margin.mm + consts.logo_w.mm)),
+		int(auxil.mm_to_px(consts.top_margin.mm + consts.logo_h.mm))])
+
+	#Координаты подписи
+	sign_coords = []
+
+	reader = PdfReader(pdf_path)
+	pages = len(reader.pages)
+	text = ""
+	for i in range(pages):
+		page = reader.pages[i]
+		text += page.extract_text()
+
+	text = text.split('\n')[:-1]
+
+	spacing = 0
+	spacing += consts.top_margin.mm * pages
+	spacing += consts.logo_h.mm
+	spacing += 7
+	spacing += 15.7
+	spacing += 5.7
+	spacing += 5.7
+	spacing += 14.2
+	spacing += 5.7
+	spacing += (len(text)) * consts.font_height # высота строчек с текстом
+	spacing += (len(text) - 3) * consts.spacing  # междустрочный интервал
+	spacing += consts.bottom_margin.mm * (pages - 1) if (pages > 1) else 0
+
+	sign_coords.append([int(auxil.mm_to_px(215.9 - consts.right_margin.mm - consts.sign_w.mm)),
+		int(auxil.mm_to_px(spacing % 279.4))])
+	sign_coords.append([int(auxil.mm_to_px(215.9 - consts.right_margin.mm)),
+		int(auxil.mm_to_px((spacing % 279.4) + consts.sign_h.mm))])
+
+	with open(json_path, "r") as json_file:
+		json_dict = json.load(json_file)
+		
+	json_dict["Tasks"]["logo_coordinates"] = logo_coords
+	json_dict["Tasks"]["signature_coordinates"] = sign_coords
+
+	with open(json_path, "w") as jsonf:
+		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)

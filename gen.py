@@ -5,7 +5,7 @@ import change_case
 
 from random import choice, randint
 import argparse
-from os import makedirs
+from os import makedirs, listdir
 import re
 from time import time
 import json
@@ -34,6 +34,9 @@ def load_samples(samples_dir):
 	with open(samples_dir + "/creators.txt") as creatorfile:
 		creator = creatorfile.read().split('\n')
 
+	logo_list = listdir(samples_dir+'/logo')
+	sign_list = listdir(samples_dir+'/signature')
+		
 	logger.debug(f"[header] length: {len(header)}")
 	logger.debug(f"[name] length: {len(name)}")
 	logger.debug(f"[intro] length: {len(intro)}")
@@ -42,7 +45,7 @@ def load_samples(samples_dir):
 	logger.debug(f"[responsible] length: {len(responsible)}")
 	logger.debug(f"[creator] length: {len(creator)}")
 
-	return (header, name, intro, instructions, execution_control, responsible, creator)
+	return (header, name, intro, instructions, execution_control, responsible, creator, logo_list, sign_list)
 
 def generate(data, out, formats, size, samples_dir):
 	logger.info(f"Using formats: {formats}")
@@ -93,16 +96,20 @@ def generate(data, out, formats, size, samples_dir):
 		creator = choice(data[6])
 		date = auxil.generate_date(unixtime=True)
 
+		logo = samples_dir + 'logo/' + choice(data[7])
+		sign = samples_dir + 'signature/' + choice(data[8])
+
 		instruction = write.extend_instruction(instruction, samples_dir)
 
-		write.write_json(instruction, responsible_arr, date, out, count)
+		json_path = write.write_json(instruction, responsible_arr, date, out, count)
 
 		if 'd' in formats:
 			docx_path = write.write_docx(header, name, intro, instruction,
-				responsible, creator, date[0], out, count)
+				responsible, creator, date[0], out, count, logo, sign)
 
 		if 'p' in formats:
-			write.write_pdf_linux(docx_path, out, count)
+			pdf_path = write.write_pdf_linux(docx_path, out, count)
+			write.write_coords(json_path, pdf_path)
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
@@ -134,7 +141,7 @@ def get_args():
 	parser.add_argument("size", help="Max size of output dir. For example: 10KB, 10MB, 10GB",
 						type=auxil.check_size_format)
 	parser.add_argument("-f", "--format", help="Formats to save (docx: d, pdf: p, jpg: j)",
-						type=auxil.parse_formats, default="d", metavar="format")
+						type=auxil.parse_formats, default="dp", metavar="format")
 	parser.add_argument("-s", "--samples", help="Path to dir with samples",
 						metavar="path", type=str, default="./samples/")
 	parser.add_argument("-o", "--out", help="Path for output files",
@@ -152,8 +159,8 @@ def main():
 	data = load_samples(args.samples)
 	bytes_size = auxil.size_to_bytes(args.size)
 
+	logger.warning("Generation is started...")
 	generate(data, args.out, args.format, bytes_size, args.samples)
-
 	logger.warning("Generation is finished!")
 
 if __name__ == '__main__':

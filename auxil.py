@@ -131,7 +131,8 @@ def add_numbering(instruction):
 
 	instruction = "".join(clauses)
 
-	return instruction
+	# return instruction
+	return clauses
 
 def check_abiword():
 	try:
@@ -166,3 +167,6 @@ def parse_formats(fmts):
 		check_os()
 
 	return fmts
+
+def mm_to_px(mm, dpi=300):
+	return (mm * (dpi/25.4))

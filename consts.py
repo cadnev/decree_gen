@@ -1,3 +1,6 @@
+from docx.shared import Mm, Pt
+from docx.enum.text import WD_LINE_SPACING
+
 numbering_types = [["arabic", "."], ["arabic", ")"], ["roman", "."], ["roman", ")"],
 				   ["bullet", "●"], ["bullet", "○"], ["latin", "."], ["latin", ")"]]
 
@@ -8,3 +11,24 @@ latin_alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm
 				  'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag', 'ah', 'ai', 'aj', 'ak',
 				  'al', 'am', 'an', 'ao', 'ap', 'aq', 'ar', 'as', 'at', 'au', 'av',
 				  'aw', 'ax', 'ay', 'az']
+
+top_margin = Mm(20)
+bottom_margin =Mm(20)
+left_margin = Mm(30)
+right_margin = Mm(15)
+
+font_name = "Times New Roman"
+font_size = Pt(14)
+
+line_spacing = WD_LINE_SPACING.ONE_POINT_FIVE
+font_height = 2.8 # mm
+spacing = 2.2 # mm
+
+logo_w = Mm(20)
+logo_h = Mm(20)
+logo_offset = 4
+
+sign_w = Mm(35)
+sign_h = Mm(17)
+
+first_line_indent = Mm(12.5)
