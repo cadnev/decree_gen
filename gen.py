@@ -29,7 +29,6 @@ def load_samples(samples_dir):
 		execution_control = execution_controlfile.read().split('\n')
 
 	with open(samples_dir + "/responsible.json") as responsiblefile:
-		# responsible = responsiblefile.read().split(";;\n")
 		responsible = json.load(responsiblefile)
 
 	with open(samples_dir + "/creators.txt") as creatorfile:
