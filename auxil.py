@@ -73,6 +73,7 @@ def to_roman(n):
                              'm     cm   d    cd   c    xc  l   xl  x   ix v  iv i'.split()):
         result += n // arabic * roman
         n %= arabic
+
     return result
 
 def add_numbering(instruction):
@@ -144,8 +145,6 @@ def check_abiword():
 
 	return 0
 
-# Возвращает string с именем платформы, если всё хорошо
-# Если чего-то не хватает, вызывает исключение
 def check_os():
 	global pltform
 	pltform = platform 
@@ -169,4 +168,9 @@ def parse_formats(fmts):
 	return fmts
 
 def mm_to_px(mm, dpi=300):
-	return (mm * (dpi/25.4))
+	return int((mm * (dpi/25.4)))
+
+def PDFunits_to_px(units, dpi=300):
+	inch = units / 72
+	mm = inch * 25.4
+	return mm_to_px(mm, dpi)

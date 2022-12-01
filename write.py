@@ -100,9 +100,11 @@ def write_docx(header, name, intro, instruction,
 	introp.paragraph_format.first_line_indent = consts.first_line_indent
 	
 	instruction = auxil.add_numbering(instruction)
-	ip = document.add_paragraph()
 	for i in instruction:
-		run = ip.add_run(i)
+		document.add_paragraph(i)
+	# ip = document.add_paragraph()
+	# for i in instruction:
+	# 	run = ip.add_run(i)
 	
 	responsiblep = document.add_paragraph(responsible)
 	responsiblep.paragraph_format.first_line_indent = consts.first_line_indent
@@ -184,31 +186,24 @@ def write_coords(json_path, pdf_path):
 	sign_coords = []
 
 	reader = PdfReader(pdf_path)
-	pages = len(reader.pages)
-	text = ""
-	for i in range(pages):
-		page = reader.pages[i]
-		text += page.extract_text()
+	page = reader.pages[-1]
 
-	text = text.split('\n')[:-1]
+	def visitor_sign(text, cm, tm, fontDict, fontSize):
+		PDFunits_offset = (-70, 10) # PDF units
 
-	spacing = 0
-	spacing += consts.top_margin.mm * pages
-	spacing += consts.logo_h.mm
-	spacing += 7
-	spacing += 15.7
-	spacing += 5.7
-	spacing += 5.7
-	spacing += 14.2
-	spacing += 5.7
-	spacing += (len(text)) * consts.font_height # высота строчек с текстом
-	spacing += (len(text) - 3) * consts.spacing  # междустрочный интервал
-	spacing += consts.bottom_margin.mm * (pages - 1) if (pages > 1) else 0
+		(x1, y1) = (tm[4]+PDFunits_offset[0], tm[5]+PDFunits_offset[1]) # PDF units
+		
+		x1 = auxil.PDFunits_to_px(x1)
+		y1 = auxil.PDFunits_to_px(y1)
+		x0 = auxil.mm_to_px(consts.logo_w.mm) * 2 # Я не знаю, почему нужно домножать на два:(
+		y0 = auxil.mm_to_px(consts.logo_h.mm)
 
-	sign_coords.append([int(auxil.mm_to_px(215.9 - consts.right_margin.mm - consts.sign_w.mm)),
-		int(auxil.mm_to_px(spacing % 279.4))])
-	sign_coords.append([int(auxil.mm_to_px(215.9 - consts.right_margin.mm)),
-		int(auxil.mm_to_px((spacing % 279.4) + consts.sign_h.mm))])
+		(x2, y2) = (x1 + x0, y1 + y0)
+		
+		sign_coords.append([[x1, y1], [x2, y2]])
+
+	page.extract_text(visitor_text=visitor_sign)
+	sign_coords = sign_coords[-1]
 
 	with open(json_path, "r") as json_file:
 		json_dict = json.load(json_file)
