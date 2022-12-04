@@ -86,7 +86,8 @@ def write_docx(header, name, intro, instruction,
 		section.left_margin = consts.left_margin
 		section.right_margin = consts.right_margin
 
-	document.add_picture(logo, consts.logo_w, consts.logo_h)
+	if logo:
+		document.add_picture(logo, consts.logo_w, consts.logo_h)
 
 	headerp = document.add_paragraph()
 	headerp.alignment = 1
@@ -102,9 +103,6 @@ def write_docx(header, name, intro, instruction,
 	instruction = auxil.add_numbering(instruction)
 	for i in instruction:
 		document.add_paragraph(i)
-	# ip = document.add_paragraph()
-	# for i in instruction:
-	# 	run = ip.add_run(i)
 	
 	responsiblep = document.add_paragraph(responsible)
 	responsiblep.paragraph_format.first_line_indent = consts.first_line_indent
@@ -113,10 +111,11 @@ def write_docx(header, name, intro, instruction,
 	datep.add_run(date)
 	datep.alignment = 2
 
-	signp = document.add_paragraph()
-	signp.alignment = 2
-	signr = signp.add_run()
-	signr.add_picture(sign, consts.sign_w, consts.sign_h)
+	if sign:
+		signp = document.add_paragraph()
+		signp.alignment = 2
+		signr = signp.add_run()
+		signr.add_picture(sign, consts.sign_w, consts.sign_h)
 
 	path = f"{out}/docx/{count}.docx"
 	document.save(path)

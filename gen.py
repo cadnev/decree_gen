@@ -47,7 +47,7 @@ def load_samples(samples_dir):
 
 	return (header, name, intro, instructions, execution_control, responsible, creator, logo_list, sign_list)
 
-def generate(data, out, formats, size, samples_dir):
+def generate(data, out, formats, size, samples_dir, is_image):
 	logger.info(f"Using formats: {formats}")
 
 	try:
@@ -96,8 +96,11 @@ def generate(data, out, formats, size, samples_dir):
 		creator = choice(data[6])
 		date = auxil.generate_date(unixtime=True)
 
-		logo = samples_dir + 'logo/' + choice(data[7])
-		sign = samples_dir + 'signature/' + choice(data[8])
+		if is_image:
+			logo = samples_dir + 'logo/' + choice(data[7])
+			sign = samples_dir + 'signature/' + choice(data[8])
+		else:
+			logo, sign = None, None
 
 		instruction = write.extend_instruction(instruction, samples_dir)
 
@@ -109,13 +112,14 @@ def generate(data, out, formats, size, samples_dir):
 
 		if 'p' in formats:
 			pdf_path = write.write_pdf_linux(docx_path, out, count)
-			write.write_coords(json_path, pdf_path)
+			if is_image:
+				write.write_coords(json_path, pdf_path)
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
 
 		count += 1
-		if count % 25 == 0:
+		if count % 5 == 0:
 			if auxil.getsize(out) >= size:
 				logger.warning(f"Size of {out} dir: {auxil.getsize(out)} bytes")
 				break
@@ -140,13 +144,16 @@ def get_args():
 
 	parser.add_argument("size", help="Max size of output dir. For example: 10KB, 10MB, 10GB",
 						type=auxil.check_size_format)
-	parser.add_argument("-f", "--format", help="Formats to save (docx: d, pdf: p, jpg: j)",
+	parser.add_argument("-i", "--image", help="use images (logo, signature, seal) in decree",
+						action="store_true")
+	parser.add_argument("-f", "--format", help="formats to save (docx: d, pdf: p, jpg: j)",
 						type=auxil.parse_formats, default="dp", metavar="format")
-	parser.add_argument("-s", "--samples", help="Path to dir with samples",
+	parser.add_argument("-s", "--samples", help="path to dir with samples",
 						metavar="path", type=str, default="./samples/")
-	parser.add_argument("-o", "--out", help="Path for output files",
+	parser.add_argument("-o", "--out", help="path for output files",
 						metavar="path", type=str, default="./decrees")
-	parser.add_argument("-v", "--verbose", action="count", default=0)
+	parser.add_argument("-v", "--verbose", action="count", default=0,
+						help="verbose output")
 
 	return parser.parse_args()
 
@@ -160,7 +167,7 @@ def main():
 	bytes_size = auxil.size_to_bytes(args.size)
 
 	logger.warning("Generation is started...")
-	generate(data, args.out, args.format, bytes_size, args.samples)
+	generate(data, args.out, args.format, bytes_size, args.samples, args.image)
 	logger.warning("Generation is finished!")
 
 if __name__ == '__main__':
