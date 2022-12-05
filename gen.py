@@ -34,8 +34,9 @@ def load_samples(samples_dir):
 	with open(samples_dir + "/creators.txt") as creatorfile:
 		creator = creatorfile.read().split('\n')
 
-	logo_list = listdir(samples_dir+'/logo')
-	sign_list = listdir(samples_dir+'/signature')
+	logo_list = listdir(samples_dir+"/logo")
+	sign_list = listdir(samples_dir+"/signature")
+	seal_list = listdir(samples_dir+"/seal")
 		
 	logger.debug(f"[header] length: {len(header)}")
 	logger.debug(f"[name] length: {len(name)}")
@@ -45,7 +46,8 @@ def load_samples(samples_dir):
 	logger.debug(f"[responsible] length: {len(responsible)}")
 	logger.debug(f"[creator] length: {len(creator)}")
 
-	return (header, name, intro, instructions, execution_control, responsible, creator, logo_list, sign_list)
+	return (header, name, intro, instructions, execution_control, responsible,
+		creator, logo_list, sign_list, seal_list)
 
 def generate(data, out, formats, size, samples_dir, is_image):
 	logger.info(f"Using formats: {formats}")
@@ -97,10 +99,11 @@ def generate(data, out, formats, size, samples_dir, is_image):
 		date = auxil.generate_date(unixtime=True)
 
 		if is_image:
-			logo = samples_dir + 'logo/' + choice(data[7])
-			sign = samples_dir + 'signature/' + choice(data[8])
+			logo = samples_dir + "logo/" + choice(data[7])
+			sign = samples_dir + "signature/" + choice(data[8])
+			seal = samples_dir + "seal/" + choice(data[9])
 		else:
-			logo, sign = None, None
+			logo, sign, seal = None, None, None
 
 		instruction = write.extend_instruction(instruction, samples_dir)
 
@@ -108,7 +111,7 @@ def generate(data, out, formats, size, samples_dir, is_image):
 
 		if 'd' in formats:
 			docx_path = write.write_docx(header, name, intro, instruction,
-				responsible, creator, date[0], out, count, logo, sign)
+				responsible, creator, date[0], out, count, logo, sign, seal)
 
 		if 'p' in formats:
 			pdf_path = write.write_pdf_linux(docx_path, out, count)

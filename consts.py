@@ -28,7 +28,10 @@ logo_w = Mm(20)
 logo_h = Mm(20)
 logo_offset = 4
 
-sign_w = Mm(35)
-sign_h = Mm(17)
+sign_w = Mm(20)
+sign_h = Mm(10)
+
+seal_w = Mm(20)
+seal_h = Mm(20)
 
 first_line_indent = Mm(12.5)

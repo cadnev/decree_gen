@@ -69,8 +69,8 @@ def extend_instruction(instruction, samples_dir):
 
 	return instruction
 
-def write_docx(header, name, intro, instruction,
-	responsible, creator, date, out, count, logo, sign):
+def write_docx(header, name, intro, instruction, responsible, creator,
+		date, out, count, logo, sign, seal):
 	document = Document()
 
 	style = document.styles['Normal']
@@ -116,6 +116,12 @@ def write_docx(header, name, intro, instruction,
 		signp.alignment = 2
 		signr = signp.add_run()
 		signr.add_picture(sign, consts.sign_w, consts.sign_h)
+
+	if seal:
+		sealp = document.add_paragraph()
+		sealp.alignment = 2
+		sealr = sealp.add_run()
+		sealr.add_picture(seal, consts.seal_w, consts.seal_h)
 
 	path = f"{out}/docx/{count}.docx"
 	document.save(path)
@@ -188,14 +194,14 @@ def write_coords(json_path, pdf_path):
 	page = reader.pages[-1]
 
 	def visitor_sign(text, cm, tm, fontDict, fontSize):
-		PDFunits_offset = (-70, 10) # PDF units
+		PDFunits_offset = (-20, 10) # PDF units
 
 		(x1, y1) = (tm[4]+PDFunits_offset[0], tm[5]+PDFunits_offset[1]) # PDF units
 		
 		x1 = auxil.PDFunits_to_px(x1)
 		y1 = auxil.PDFunits_to_px(y1)
-		x0 = auxil.mm_to_px(consts.logo_w.mm) * 2 # Я не знаю, почему нужно домножать на два:(
-		y0 = auxil.mm_to_px(consts.logo_h.mm)
+		x0 = auxil.mm_to_px(consts.sign_w.mm)
+		y0 = auxil.mm_to_px(consts.sign_h.mm)
 
 		(x2, y2) = (x1 + x0, y1 + y0)
 		
@@ -204,11 +210,28 @@ def write_coords(json_path, pdf_path):
 	page.extract_text(visitor_text=visitor_sign)
 	sign_coords = sign_coords[-1]
 
+	#Координаты печати
+	seal_coords = []
+
+	seal_x_offset = 0 # px
+	seal_y_offset = 60 # px
+
+	x1 = sign_coords[0][0] + seal_x_offset
+	y1 = sign_coords[1][1] + seal_y_offset
+
+	x0 = auxil.mm_to_px(consts.seal_w.mm)
+	y0 = auxil.mm_to_px(consts.seal_h.mm) + 25 # оффсет для нижней границы
+
+	(x2, y2) = (x1 + x0, y1 + y0)
+
+	seal_coords = [[x1, y1], [x2, y2]]
+
 	with open(json_path, "r") as json_file:
 		json_dict = json.load(json_file)
 		
 	json_dict["Tasks"]["logo_coordinates"] = logo_coords
 	json_dict["Tasks"]["signature_coordinates"] = sign_coords
+	json_dict["Tasks"]["seal_coordinates"] = seal_coords
 
 	with open(json_path, "w") as jsonf:
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
