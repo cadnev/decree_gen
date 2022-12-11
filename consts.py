@@ -30,11 +30,13 @@ logo_offset = 4 # px
 
 sign_w = Mm(20)
 sign_h = Mm(10)
-PDFunits_offset = (-20, 10) # sign offset in PDF units
+PDFunits_offset = (-20, 15) # sign offset in PDF units
+sign_padding = 10 # px
 
 seal_w = Mm(20)
 seal_h = Mm(20)
-seal_offset = (0, 60) # seal offset in px
+seal_offset = (0, 40) # seal offset in px (расстояние между подписью и печатью)
+seal_padding = 50 # px
 
 first_line_indent = Mm(12.5)
 

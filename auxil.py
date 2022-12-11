@@ -188,57 +188,58 @@ def calculate_sign_coords(tmx, tmy, new_page=False):
 	sign_coords = []
 
 	if not new_page:
-		(x1, y1) = (tmx+consts.PDFunits_offset[0], tmy+consts.PDFunits_offset[1]) # PDF units
-			
-		x1 = PDFunits_to_px(x1)
-		y1 = PDFunits_to_px(y1)
 		x0 = mm_to_px(consts.sign_w.mm)
 		y0 = mm_to_px(consts.sign_h.mm)
 
-		(x2, y2) = (x1 + x0, y1 + y0)
+		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm)
+		
+		y1 = tmy + consts.PDFunits_offset[1]
+		y1 = PDFunits_to_px(y1)
+
+		x1 = x2 - x0
+		y2 = y1 + y0
 
 	else:
-		offset = 4 # px
-
 		x0 = mm_to_px(consts.sign_w.mm)
 		y0 = mm_to_px(consts.sign_h.mm)
 
-		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm) - offset
-		y1 = mm_to_px(consts.top_margin.mm) - offset
+		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm)
+		
+		y1 = mm_to_px(consts.top_margin.mm)
 
-		x1 = x2 - x0 - offset
-		y2 = y1 + y0 + offset
+		x1 = x2 - x0
+		y2 = y1 + y0
 	
-	sign_coords.append([x1, y1])
-	sign_coords.append([x2, y2])
+	pd = consts.sign_padding
+	sign_coords.append([x1 - pd, y1 - pd])
+	sign_coords.append([x2 + pd, y2 + pd])
 
 	return sign_coords
 
 def calculate_seal_coords(sign_coords, new_page=False):
-	if not new_page:
 
-		x1 = sign_coords[0][0] + consts.seal_offset[0]
+	if not new_page:
+		x0 = mm_to_px(consts.seal_w.mm)
+		y0 = mm_to_px(consts.seal_h.mm)
+
+		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm)
+
 		y1 = sign_coords[1][1] + consts.seal_offset[1]
 
-		x0 = mm_to_px(consts.seal_w.mm)
-		y0 = mm_to_px(consts.seal_h.mm) + 25 # оффсет для нижней границы
-
-		(x2, y2) = (x1 + x0, y1 + y0)
-
-		seal_coords = [[x1, y1], [x2, y2]]
+		x1 = x2 - x0
+		y2 = y1 + y0
 
 	else:
-		offset = 4
+		x0 = mm_to_px(consts.seal_w.mm)
+		y0 = mm_to_px(consts.seal_h.mm)
 
-		x0 = mm_to_px(consts.seal_w.mm) + offset
-		y0 = mm_to_px(consts.seal_h.mm) + offset
+		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm)
+		y1 = mm_to_px(consts.top_margin.mm)
 
-		x2 = PDFunits_to_px(consts.page_w) - mm_to_px(consts.right_margin.mm) - offset
-		y1 = mm_to_px(consts.top_margin.mm) - offset
+		x1 = x2 - x0
+		y2 = y1 + y0
 
-		x1 = x2 - x0 - offset
-		y2 = y1 + y0 + offset
-
-		seal_coords = [[x1, y1], [x2, y2]]
+	pd = consts.seal_padding
+	seal_coords = [[x1-pd, y1-pd], [x2+pd, y2+pd]]
 
 	return seal_coords
