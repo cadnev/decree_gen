@@ -179,52 +179,47 @@ def write_jpg(out, count):
 	pdf2jpg.convert_pdf2jpg(pdf, output, pages="ALL")
 	logger.debug(f"Saved {out}/jpg/{count}.pdf_dir/")
 
-def write_coords(json_path, pdf_path):
-	# Координаты логотипа
-	logo_coords = []
-	logo_coords.append([int(auxil.mm_to_px(consts.left_margin.mm)) - consts.logo_offset,
-		int(auxil.mm_to_px(consts.top_margin.mm)) - consts.logo_offset])
-	logo_coords.append([int(auxil.mm_to_px(consts.left_margin.mm + consts.logo_w.mm)),
-		int(auxil.mm_to_px(consts.top_margin.mm + consts.logo_h.mm))])
-
-	#Координаты подписи
-	sign_coords = []
-
+def extract_tm(pdf_path, page_num):
 	reader = PdfReader(pdf_path)
-	page = reader.pages[-1]
+	page = reader.pages[page_num]
 
+	tmx, tmy = [], []
 	def visitor_sign(text, cm, tm, fontDict, fontSize):
-		PDFunits_offset = (-20, 10) # PDF units
+		tmx.append(tm[4])
+		tmy.append(tm[5])
 
-		(x1, y1) = (tm[4]+PDFunits_offset[0], tm[5]+PDFunits_offset[1]) # PDF units
-		
-		x1 = auxil.PDFunits_to_px(x1)
-		y1 = auxil.PDFunits_to_px(y1)
-		x0 = auxil.mm_to_px(consts.sign_w.mm)
-		y0 = auxil.mm_to_px(consts.sign_h.mm)
+	text = page.extract_text(visitor_text=visitor_sign)
 
-		(x2, y2) = (x1 + x0, y1 + y0)
-		
-		sign_coords.append([[x1, y1], [x2, y2]])
+	# Координаты последнего блока с текстом
+	# в PdfUnits
+	tmx = tmx[-1]
+	tmy = tmy[-1]
 
-	page.extract_text(visitor_text=visitor_sign)
-	sign_coords = sign_coords[-1]
+	return (tmx, tmy, len(page.images))
 
-	#Координаты печати
-	seal_coords = []
+def write_coords(json_path, pdf_path):	
+	# Координаты логотипа
+	logo_coords = auxil.calculate_logo_coords()
 
-	seal_x_offset = 0 # px
-	seal_y_offset = 60 # px
+	# Координаты подписи
+	(tmx, tmy, im_count) = extract_tm(pdf_path, -1)
 
-	x1 = sign_coords[0][0] + seal_x_offset
-	y1 = sign_coords[1][1] + seal_y_offset
+	if im_count >= 2: # Если на последней странице есть подпись и печать
+		if (tmx == 0) or (tmy == 0): # Если на странице только подпись и печать
+			sign_coords = auxil.calculate_sign_coords(tmx, tmy, new_page=True)
+		else:
+			sign_coords = auxil.calculate_sign_coords(tmx, tmy)
 
-	x0 = auxil.mm_to_px(consts.seal_w.mm)
-	y0 = auxil.mm_to_px(consts.seal_h.mm) + 25 # оффсет для нижней границы
+	else: # Если на последней странице только печать
+		(tmx, tmy, _) = extract_tm(pdf_path, -2)
+		sign_coords = auxil.calculate_sign_coords(tmx, tmy)
 
-	(x2, y2) = (x1 + x0, y1 + y0)
+	# Координаты печати
+	if im_count >= 2:
+		seal_coords = auxil.calculate_seal_coords(sign_coords)
 
-	seal_coords = [[x1, y1], [x2, y2]]
+	else:
+		seal_coords = auxil.calculate_seal_coords([], new_page=True)
 
 	with open(json_path, "r") as json_file:
 		json_dict = json.load(json_file)

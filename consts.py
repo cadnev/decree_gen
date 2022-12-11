@@ -26,12 +26,17 @@ spacing = 2.2 # mm
 
 logo_w = Mm(20)
 logo_h = Mm(20)
-logo_offset = 4
+logo_offset = 4 # px
 
 sign_w = Mm(20)
 sign_h = Mm(10)
+PDFunits_offset = (-20, 10) # sign offset in PDF units
 
 seal_w = Mm(20)
 seal_h = Mm(20)
+seal_offset = (0, 60) # seal offset in px
 
 first_line_indent = Mm(12.5)
+
+page_w = 612 # PDFUnits
+page_h = 792 # PDFUnits
