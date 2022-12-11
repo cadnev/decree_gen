@@ -229,9 +229,10 @@ def write_coords(json_path, pdf_path):
 	with open(json_path, "r") as json_file:
 		json_dict = json.load(json_file)
 		
-	json_dict["Tasks"]["logo_coordinates"] = logo_coords
-	json_dict["Tasks"]["signature_coordinates"] = sign_coords
-	json_dict["Tasks"]["seal_coordinates"] = seal_coords
+	json_dict["Images"] = {}
+	json_dict["Images"]["logo_coordinates"] = logo_coords
+	json_dict["Images"]["signature_coordinates"] = sign_coords
+	json_dict["Images"]["seal_coordinates"] = seal_coords
 
 	with open(json_path, "w") as jsonf:
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)
