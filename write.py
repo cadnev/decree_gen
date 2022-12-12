@@ -205,8 +205,10 @@ def write_coords(json_path, pdf_path):
 	(tmx, tmy, im_count) = extract_tm(pdf_path, -1)
 
 	if im_count >= 2: # Если на последней странице есть подпись и печать
+
 		if (tmx == 0) or (tmy == 0): # Если на странице только подпись и печать
 			sign_coords = auxil.calculate_sign_coords(tmx, tmy, new_page=True)
+			
 		else:
 			sign_coords = auxil.calculate_sign_coords(tmx, tmy)
 
