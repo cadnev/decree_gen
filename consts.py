@@ -42,3 +42,5 @@ first_line_indent = Mm(12.5)
 
 page_w = 612 # PDFUnits
 page_h = 792 # PDFUnits
+
+text_borders = (20, 60) # text offset in px

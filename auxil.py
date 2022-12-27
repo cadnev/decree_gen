@@ -2,12 +2,14 @@ import russian_datetime
 import consts
 
 import re
-from loguru import logger
 from sys import stdout, platform
 from random import randint, choice
 import os
 import subprocess as sb
 from argparse import ArgumentTypeError
+
+from PyPDF2 import PdfReader
+from loguru import logger
 
 def logger_config(v):
 	logger.remove()
@@ -243,3 +245,199 @@ def calculate_seal_coords(sign_coords, new_page=False):
 	seal_coords = [[x1-pd, y1-pd], [x2+pd, y2+pd]]
 
 	return seal_coords
+
+# coords: list - список из пар координат (x, y)
+def calculate_borders(original_coords, creator_and_date=False, task=False):
+
+	def calculate(coords):
+		if len(coords) == 1:
+			x1 = min(coords)
+			y1 = coords[0][1]
+			y2 = coords[0][1]
+		
+		elif len(coords) > 1:
+			x1 = min(coords)
+			y1 = 10000
+			y2 = 0
+
+			for pair in coords:
+				if pair[1] < y1:
+					y1 = pair[1]
+
+				if pair[1] > y2:
+					y2 = pair[1]
+
+		else:
+			return []
+
+		x1 = PDFunits_to_px(x1[0])
+		y1 = PDFunits_to_px(y1)
+		y2 = PDFunits_to_px(y2)
+
+		x_offset = consts.text_borders[0]
+		y_offset = consts.text_borders[1]
+
+		if task:
+			return [[x1 - x_offset, y1 - y_offset * 2], [2385, y2 + y_offset / 2]]
+		elif  creator_and_date:
+			return [[x1 - x_offset, y1 - y_offset * 0.75], [2385, y2 + y_offset / 4]]
+		else:
+			return [[x1 - x_offset, y1 - y_offset * 1.6], [2385, y2 + y_offset / 2]]
+
+	if original_coords == ["page_break"]:
+		return original_coords
+	elif "page_break" in original_coords:
+		splitted_coords = []
+		result = []
+		for pair in original_coords:
+			if pair != "page_break":
+				splitted_coords.append(pair)
+			else:
+				result.append(calculate(splitted_coords))
+				result.append("page_break") 
+				splitted_coords = []
+	else:
+		return calculate(original_coords)
+
+	return result
+
+
+# pdf_path: str - путь к pdf файлу
+# data: tuple - кортеж данных для генерации
+def calculate_text_coords(pdf_path, data):
+	header, header_coords = data[0], []
+	name, name_coords = data[1], []
+	intro, intro_coords = data[2], []
+	instruction, instruction_coords = data[3], [[] * i for i in range(len(data[3]))]
+	responsible, responsible_coords = data[4], []
+	creator, creator_coords = data[5], []
+	date, date_coords = data[6], []
+
+	reader = PdfReader(pdf_path)
+	for page in reader.pages:
+	# page = reader.pages[0]
+
+		raw_data = []
+		def visitor_t(text, cm, tm, fontDict, fontSize):
+			raw_data.append([text, tm[4], tm[5]]) # [text, x1, y1]
+
+		page.extract_text(visitor_text=visitor_t) # Посимвольное извлечение координат текста
+
+		for i in range(len(raw_data)):
+			raw_data[i][1] = int(raw_data[i][1])
+			raw_data[i][2] = int(raw_data[i][2])
+
+		# Объединение символов с одинаковыми координатами в строки
+		# text - список со строками
+		# coords - список с соответствующими строкам координатами
+		text, coords = [], []
+		for i in range(len(raw_data)):
+			if [raw_data[i][1], raw_data[i][2]] not in coords:
+				coords.append([raw_data[i][1], raw_data[i][2]])
+				text.append(raw_data[i][0])
+			else:
+				text[-1] += raw_data[i][0]
+
+		if (len(text) != len(coords)):
+			logger.error("[text] != [coords]")
+			raise SystemExit
+
+		formatted_markup = {}
+		for i in range(len(text)):
+			if text[i] == '':
+				continue
+
+			formatted_markup[text[i]] = coords[i]
+
+		# Если ключ словаря (строка в документе) входит в секцию данных для генерации,
+		# то добавить координаты строки в соответствующий список
+		for k in list(formatted_markup):
+
+			if ((k.replace('\n', '') in header) and (not name_coords)):
+				val = formatted_markup.pop(k)
+				header_coords.append(val)
+
+			if ((k.replace('\n', '') in name) and (not intro_coords)):
+				try:
+					val = formatted_markup.pop(k)
+					name_coords.append(val)
+				except KeyError:
+					pass
+
+			if (k.replace('\n', '') in intro):
+				try:
+					val = formatted_markup.pop(k)
+					intro_coords.append(val)
+				except KeyError:
+					pass
+
+			for i in range(len(instruction)):
+				task = instruction[i]["task_text"]
+				if (k.replace('\n', '') in task):
+					try:
+						val = formatted_markup.pop(k)
+						instruction_coords[i].append(val)
+					except KeyError:
+						pass
+
+			if (k.replace('\n', '') in responsible):
+				try:
+					val = formatted_markup.pop(k)
+					responsible_coords.append(val)
+				except KeyError:
+					pass
+
+			if (k.replace('\n', '') in creator):
+				try:
+					val = formatted_markup.pop(k)
+					creator_coords.append(val)
+				except KeyError:
+					pass
+
+			if (k.replace('\n', '') in '.' + date):
+				try:
+					val = formatted_markup.pop(k)
+					date_coords.append(val)
+				except KeyError:
+					pass
+
+		header_coords.append("page_break")
+		name_coords.append("page_break")
+		intro_coords.append("page_break")
+		instruction_coords.append(["page_break"])
+		responsible_coords.append("page_break")
+		creator_coords.append("page_break")
+		date_coords.append("page_break")
+
+
+	header_coords = calculate_borders(header_coords)
+	
+	name_coords = calculate_borders(name_coords)
+	
+	intro_coords = calculate_borders(intro_coords)
+	
+	task_coords = []
+	for task in instruction_coords:
+		task_coords.append(calculate_borders(task, task=True))
+
+	responsible_coords = calculate_borders(responsible_coords)
+
+	creator_coords = calculate_borders(creator_coords, creator_and_date=True)
+
+	date_coords = calculate_borders(date_coords, creator_and_date=True)
+
+	# try:
+	# 	intro_coords[0][1] -= 55
+	# except TypeError:
+	# 	pass
+
+	# for i in range(len(task_coords)):
+	# 	try:
+	# 		task_coords[i][0][1] -= 80
+	# 	except TypeError:
+	# 		continue
+
+	result = [header_coords, name_coords, intro_coords, task_coords, responsible_coords,
+		creator_coords, date_coords]
+
+	return result

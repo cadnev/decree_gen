@@ -197,39 +197,52 @@ def extract_tm(pdf_path, page_num):
 
 	return (tmx, tmy, len(page.images))
 
-def write_coords(json_path, pdf_path):	
-	# Координаты логотипа
-	logo_coords = auxil.calculate_logo_coords()
-
-	# Координаты подписи
-	(tmx, tmy, im_count) = extract_tm(pdf_path, -1)
-
-	if im_count >= 2: # Если на последней странице есть подпись и печать
-
-		if (tmx == 0) or (tmy == 0): # Если на странице только подпись и печать
-			sign_coords = auxil.calculate_sign_coords(tmx, tmy, new_page=True)
-			
-		else:
-			sign_coords = auxil.calculate_sign_coords(tmx, tmy)
-
-	else: # Если на последней странице только печать
-		(tmx, tmy, _) = extract_tm(pdf_path, -2)
-		sign_coords = auxil.calculate_sign_coords(tmx, tmy)
-
-	# Координаты печати
-	if im_count >= 2:
-		seal_coords = auxil.calculate_seal_coords(sign_coords)
-
-	else:
-		seal_coords = auxil.calculate_seal_coords([], new_page=True)
+def write_coords(json_path, pdf_path, data, is_image=False):
 
 	with open(json_path, "r") as json_file:
 		json_dict = json.load(json_file)
+
+	if is_image:
+
+		# Координаты логотипа
+		logo_coords = auxil.calculate_logo_coords()
+
+		# Координаты подписи
+		(tmx, tmy, im_count) = extract_tm(pdf_path, -1)
+
+		if im_count >= 2: # Если на последней странице есть подпись и печать
+
+			if (tmx == 0) or (tmy == 0): # Если на странице только подпись и печать
+				sign_coords = auxil.calculate_sign_coords(tmx, tmy, new_page=True)
+				
+			else:
+				sign_coords = auxil.calculate_sign_coords(tmx, tmy)
+
+		else: # Если на последней странице только печать
+			(tmx, tmy, _) = extract_tm(pdf_path, -2)
+			sign_coords = auxil.calculate_sign_coords(tmx, tmy)
+
+		# Координаты печати
+		if im_count >= 2:
+			seal_coords = auxil.calculate_seal_coords(sign_coords)
+
+		else:
+			seal_coords = auxil.calculate_seal_coords([], new_page=True)
 		
-	json_dict["Images"] = {}
-	json_dict["Images"]["logo_coordinates"] = logo_coords
-	json_dict["Images"]["signature_coordinates"] = sign_coords
-	json_dict["Images"]["seal_coordinates"] = seal_coords
+		json_dict["Images"] = {}
+		json_dict["Images"]["logo_coordinates"] = logo_coords
+		json_dict["Images"]["signature_coordinates"] = sign_coords
+		json_dict["Images"]["seal_coordinates"] = seal_coords
+
+	text_coords = auxil.calculate_text_coords(pdf_path, data)
+	json_dict["Text"] = {}
+	json_dict["Text"]["header"] = text_coords[0]
+	json_dict["Text"]["name"] = text_coords[1]
+	json_dict["Text"]["intro"] = text_coords[2]
+	json_dict["Text"]["tasks"] = text_coords[3]
+	json_dict["Text"]["responsible"] = text_coords[4]
+	json_dict["Text"]["creator"] = text_coords[5]
+	json_dict["Text"]["date"] = text_coords[6]
 
 	with open(json_path, "w") as jsonf:
 		json.dump(json_dict, jsonf, ensure_ascii=False, indent=4)

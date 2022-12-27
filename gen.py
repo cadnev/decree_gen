@@ -115,8 +115,14 @@ def generate(data, out, formats, size, samples_dir, is_image):
 
 		if 'p' in formats:
 			pdf_path = write.write_pdf_linux(docx_path, out, count)
+
+			generation_data = (header, name, intro, instruction,
+				responsible, creator, date[0])
+			
 			if is_image:
-				write.write_coords(json_path, pdf_path)
+				write.write_coords(json_path, pdf_path, generation_data, is_image=True)
+			else:
+				write.write_coords(json_path, pdf_path, generation_data)
 
 		if 'j' in formats:
 			write.write_jpg(out, count)
